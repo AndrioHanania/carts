@@ -21,6 +21,12 @@ pipeline{
             steps{
                 sh 'mvn package -DskipTests'
             }
+
+            post {
+                success {
+                    archiveArtifacts '**/target/*.jar'
+                }
+            }
         }
     }
 }
