@@ -72,7 +72,8 @@ public class HTTPMonitoringInterceptor implements HandlerInterceptor {
     private String getMatchingURLPattern(HttpServletRequest httpServletRequest) {
         String res = "";
         for (PatternsRequestCondition pattern : getUrlPatterns()) {
-            if (pattern.getMatchingCondition(httpServletRequest) != null &&
+            if (pattern != null &&
+                    pattern.getMatchingCondition(httpServletRequest) != null &&
                     !httpServletRequest.getServletPath().equals("/error")) {
                 res = pattern.getMatchingCondition(httpServletRequest).getPatterns().iterator()
                         .next();
@@ -85,15 +86,28 @@ public class HTTPMonitoringInterceptor implements HandlerInterceptor {
     private Set<PatternsRequestCondition> getUrlPatterns() {
         if (this.urlPatterns == null) {
             this.urlPatterns = new HashSet<>();
-            requestMappingHandlerMapping.getHandlerMethods().forEach((mapping, handlerMethod) ->
-                    urlPatterns.add(mapping.getPatternsCondition()));
+
+            requestMappingHandlerMapping.getHandlerMethods()
+                    .forEach((mapping, handlerMethod) -> {
+                        PatternsRequestCondition condition = mapping.getPatternsCondition();
+                        if (condition != null) {
+                            urlPatterns.add(condition);
+                        }
+                    });
+
             RepositoryRestHandlerMapping repositoryRestHandlerMapping = new
                     RepositoryRestHandlerMapping(mappings, repositoryConfiguration);
             repositoryRestHandlerMapping.setJpaHelper(jpaHelper);
             repositoryRestHandlerMapping.setApplicationContext(applicationContext);
             repositoryRestHandlerMapping.afterPropertiesSet();
-            repositoryRestHandlerMapping.getHandlerMethods().forEach((mapping, handlerMethod) ->
-                    urlPatterns.add(mapping.getPatternsCondition()));
+
+            repositoryRestHandlerMapping.getHandlerMethods()
+                    .forEach((mapping, handlerMethod) -> {
+                        PatternsRequestCondition condition = mapping.getPatternsCondition();
+                        if (condition != null) {
+                            urlPatterns.add(condition);
+                        }
+                    });
         }
         return this.urlPatterns;
     }
